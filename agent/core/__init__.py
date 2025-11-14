@@ -15,21 +15,21 @@ __copyright__ = "2025 Delaunay"
 __url__ = "https://github.com/milabench/agent"
 
 
-def discover_plugins(module):
-    """Discover uetools plugins"""
-    path = module.__path__
-    name = module.__name__
+# def discover_plugins(module):
+#     """Discover uetools plugins"""
+#     path = module.__path__
+#     name = module.__name__
 
-    plugins = {}
+#     plugins = {}
 
-    for _, name, _ in pkgutil.iter_modules(path, name + "."):
-        plugins[name] = importlib.import_module(name)
-        print(f" - Found plugin: {name}")
+#     for _, name, _ in pkgutil.iter_modules(path, name + "."):
+#         plugins[name] = importlib.import_module(name)
+#         print(f" - Found plugin: {name}")
 
-    return plugins
+#     return plugins
 
 
-data_path = importlib_resources.files("agent.data")
+# data_path = importlib_resources.files("agent.data")
 
-with open(data_path / "data.json", encoding="utf-8") as file:
-    print(json.dumps(json.load(file), indent=2))
+# with open(data_path / "data.json", encoding="utf-8") as file:
+#     print(json.dumps(json.load(file), indent=2))
