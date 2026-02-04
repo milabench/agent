@@ -1,0 +1,49 @@
+[Unit]
+Description=Milabench Agent - Remote Work Scheduler
+After=network.target
+
+[Service]
+Type=simple
+User={{ agent_service_user }}
+Group={{ agent_service_group }}
+WorkingDirectory={{ agent_install_dir }}
+
+# Environment variables
+EnvironmentFile={{ milabench_base }}/.env
+Environment="PATH={{ agent_install_dir }}/.venv/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
+Environment="PYTHONUNBUFFERED=1"
+Environment="HOME={{ milabench_base }}"
+
+{% if agent_deployment_mode == "dev" %}
+# Development mode: Flask with debug enabled
+ExecStart={{ agent_install_dir }}/.venv/bin/python -c "from agent.server.server import server; app = server(); app.run(host='{{ agent_server_host }}', port={{ agent_server_port }}, debug=True)"
+{% else %}
+# Production mode: Waitress WSGI server
+ExecStart={{ agent_install_dir }}/.venv/bin/waitress-serve --host {{ agent_server_host }} --port {{ agent_server_port }} --threads {{ agent_server_workers }} agent.server:server
+{% endif %}
+
+# Restart policy
+Restart=on-failure
+RestartSec=5s
+StartLimitInterval=60
+StartLimitBurst=3
+
+# Process management
+KillMode=process
+KillSignal=SIGTERM
+TimeoutStopSec=10
+
+# Logging
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier={{ agent_service_name }}
+
+# Security
+PrivateTmp=yes
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=yes
+ReadWritePaths={{ agent_job_dir }} {{ agent_log_dir }}
+
+[Install]
+WantedBy=multi-user.target

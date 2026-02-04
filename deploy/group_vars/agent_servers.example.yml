@@ -1,0 +1,14 @@
+---
+# Example: Custom configuration for specific agent group
+# Copy this to group_vars/agent_servers.yml and customize
+
+# milabench_base: /opt/milabench
+# agent_install_dir: "{{ milabench_base }}/agent"
+# agent_job_dir: "{{ milabench_base }}/jobrunner"
+# agent_user: milabench
+# agent_group: milabench
+# python_version: "3.10"
+# agent_server_host: "0.0.0.0"
+# agent_server_port: 5000
+# agent_server_workers: 4
+# agent_log_level: "INFO"

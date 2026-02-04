@@ -3,7 +3,7 @@ from pathlib import Path
 
 from setuptools import setup
 
-with open("agent/core/__init__.py") as file:
+with open("agent/server/__init__.py") as file:
     for line in file.readlines():
         if "version" in line:
             version = line.split("=")[1].strip().replace('"', "")
@@ -31,7 +31,7 @@ if __name__ == "__main__":
             "Operating System :: OS Independent",
         ],
         packages=[
-            "agent.core",
+            "agent.server",
             "agent.plugins.example",
         ],
         setup_requires=["setuptools"],

@@ -1,0 +1,42 @@
+# Default configuration for milabench agent deployment
+# These values can be overridden per host or group
+
+# Base installation directory
+milabench_base: /opt/milabench
+
+# Agent repository clone location
+agent_install_dir: "{{ milabench_base }}/agent"
+
+# Job runner directory
+agent_job_dir: "{{ milabench_base }}/jobrunner"
+
+# Agent server user (should be created during setup)
+agent_user: milabench
+agent_group: milabench
+
+# Python version requirement
+python_version: "3.12"
+
+# Virtual environment location
+agent_venv_dir: "{{ agent_install_dir }}/.venv"
+
+# Deployment mode: 'dev' (Flask with debug) or 'prod' (Waitress WSGI server)
+agent_deployment_mode: "dev"
+
+# Flask/Server configuration
+agent_server_host: "0.0.0.0"
+agent_server_port: 5000
+agent_server_workers: 4
+
+# Git repository for agent
+agent_repo_url: "https://github.com/milabench/agent.git"
+agent_repo_branch: "main"
+
+# Service configuration
+agent_service_name: "milabench-agent"
+agent_service_user: "{{ agent_user }}"
+agent_service_group: "{{ agent_group }}"
+
+# Logging configuration
+agent_log_dir: "/var/log/milabench"
+agent_log_level: "INFO"
