@@ -98,13 +98,12 @@
 
     - name: Install agent package and dependencies with UV
       shell: |
-        cd {{ agent_install_dir }}
-        uv venv use {{ agent_venv_dir }}
-        uv pip install -e .
+        uv pip install -e {{ agent_install_dir }}
       become_user: "{{ agent_user }}"
       args:
         executable: /bin/bash
       environment:
+        UV_PYTHON: "{{ agent_venv_dir }}/bin/python"
         HOME: "{{ milabench_base }}"
 
     - name: Create systemd service file
