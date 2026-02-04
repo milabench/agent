@@ -127,7 +127,7 @@ def server():
     scheduler = BackgroundScheduler()
     app.scheduler = scheduler
     app.scheduler.start()
-    app.scheduler.add_job(check_jobs, 'interval', seconds=60)
+    
 
     def get_job(name):
         for job in job_registry:
@@ -151,6 +151,8 @@ def server():
             if job["next"]:
                 schedule_next(job["next"])
 
+    app.scheduler.add_job(check_jobs, 'interval', seconds=60)
+    
     @app.route("/popen", methods=['POST'])
     def run_command():
         arguments = request.json
