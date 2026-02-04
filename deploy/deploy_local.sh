@@ -10,9 +10,10 @@ SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 CURRENT_USER="$(id -un)"
 CURRENT_GROUP="$(id -gn)"
 HOME_DIR="${HOME:-/home/${CURRENT_USER}}"
-DEFAULT_BASE="${HOME_DIR}/milabench"
+# Default base should match production path; allow override via env
+DEFAULT_BASE="/opt/milabench"
 
-MIB_BASE="${MILABENCH_BASE:-$DEFAULT_BASE}"
+MIB_BASE="${MILABENCH_INSTALL_BASE:-$DEFAULT_BASE}"
 
 EXTRA_VARS="agent_deployment_mode=dev agent_user=${CURRENT_USER} agent_group=${CURRENT_GROUP} milabench_base=${MIB_BASE}"
 

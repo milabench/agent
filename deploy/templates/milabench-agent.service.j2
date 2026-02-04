@@ -16,7 +16,7 @@ Environment="HOME={{ milabench_base }}"
 
 {% if agent_deployment_mode == "dev" %}
 # Development mode: Flask with debug enabled
-ExecStart={{ agent_install_dir }}/.venv/bin/flask --app agent.server.server:server run --host=0.0.0.0 --debug"
+ExecStart={{ agent_install_dir }}/.venv/bin/flask --app agent.server.server:server run --host=0.0.0.0 --debug
 {% else %}
 # Production mode: Waitress WSGI server
 ExecStart={{ agent_install_dir }}/.venv/bin/waitress-serve --host {{ agent_server_host }} --port {{ agent_server_port }} --threads {{ agent_server_workers }} agent.server:server

@@ -35,7 +35,15 @@ if __name__ == "__main__":
             "agent.plugins.example",
         ],
         setup_requires=["setuptools"],
-        install_requires=["importlib_resources"],
+        install_requires=[
+            "importlib_resources",
+            "flask",
+            "flask_caching",
+            "flask-socketio",
+            "waitress",
+            "apscheduler",
+            "filelock",
+        ],
         package_data={
             "agent.data": [
                 "agent/data",

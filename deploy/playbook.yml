@@ -24,19 +24,6 @@
         state: present
       when: ansible_os_family == "Debian"
 
-    - name: Install system dependencies (RedHat-based)
-      yum:
-        name:
-          - python{{ python_version }}
-          - python{{ python_version }}-devel
-          - git
-          - gcc
-          - openssl-devel
-          - libffi-devel
-          - curl
-        state: present
-      when: ansible_os_family == "RedHat"
-
     - name: Create milabench group
       become: true
       group:
@@ -111,35 +98,14 @@
 
     - name: Install agent package and dependencies with UV
       shell: |
-        export PATH="$HOME/.local/bin:{{ agent_venv_dir }}/bin:$PATH"
         cd {{ agent_install_dir }}
+        uv venv use {{ agent_venv_dir }}
         uv pip install -e .
       become_user: "{{ agent_user }}"
       args:
         executable: /bin/bash
       environment:
         HOME: "{{ milabench_base }}"
-
-    - name: Install server dependencies with UV
-      shell: |
-        export PATH="$HOME/.local/bin:{{ agent_venv_dir }}/bin:$PATH"
-        uv pip install Flask APScheduler filelock
-      become_user: "{{ agent_user }}"
-      args:
-        executable: /bin/bash
-      environment:
-        HOME: "{{ milabench_base }}"
-
-    - name: Install Waitress for production mode
-      shell: |
-        export PATH="$HOME/.local/bin:{{ agent_venv_dir }}/bin:$PATH"
-        uv pip install waitress
-      become_user: "{{ agent_user }}"
-      args:
-        executable: /bin/bash
-      environment:
-        HOME: "{{ milabench_base }}"
-      when: agent_deployment_mode == "prod"
 
     - name: Create systemd service file
       template:
