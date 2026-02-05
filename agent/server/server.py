@@ -39,13 +39,16 @@ def _worker_run(base_state, stdout, stderr, info, cmd, options, cancel):
                 while True:
                     if cancel.is_set():
                         os.getpgid(p.pid)
+                        break
 
                     rc = p.poll()
+                    if rc is not None:
+                        break
+
                     time.sleep(0.2)
-                    break
 
                 p.wait()
-
+                
                 status = "WTF"
                 if rc is not None:
                     if cancel.is_set():
@@ -79,12 +82,12 @@ def run(job_dir, job_id, cmd, **options):
         "job_state": ["UNKNOWN"],
         "comment": f"jr_job_id={job_id}",
     }
-
-    with open(script_pth, "w") as fp:
-        json.dump(cmd, fp)
     
     with open(cmd_pth, "w") as fp:
-        fp.write(f"bash {script_pth}")
+        if isinstance(cmd, list):
+            fp.write(" ".join(cmd))
+        else:
+            fp.write(cmd)
     
     cancel_event = threading.Event()
 
@@ -112,9 +115,11 @@ def run(job_dir, job_id, cmd, **options):
     }
         
 
-def make_job_name(job_dir):
+def make_job_name(job_name=None):
     unique_id = str(uuid.uuid4())[:8]
     now = int(time.time() - 1766176827)
+    if job_name is not None:
+        return f"{job_name}_{now:5d}_{unique_id}"
     return f"{now:5d}_{unique_id}"
 
 
@@ -128,10 +133,6 @@ def server():
     app.scheduler = scheduler
     app.scheduler.start()
  
-    def ping_manager():
-        manager = f"localhost:27484"
-
-
     def get_job(name):
         for job in job_registry:
             if job["job_id"] == name:
@@ -156,16 +157,79 @@ def server():
 
     app.scheduler.add_job(check_jobs, 'interval', seconds=60)
 
+    @app.route("/rpc", methods=['POST'])
+    def rpc():
+        """Call to python, returns json"""
+        pass
+
+    @app.route("/jobs/list", methods=['GET'])
+    def list_jobs():
+        return [j["job_id"] for j in job_registry]
+
+    def tail(path, n=10):
+        with open(path, "r", encoding="utf-8", errors="ignore") as f:
+            return list(deque(f, maxlen=n))
+
+    def job_log(job_id, name, n):
+        base = os.path.join(job_dir, job_id)
+        stdout = os.path.join(base, f"log.{name}")
+        return tail(name, n)
+
+    @app.route("/job/<string:job_id>/status", methods=['GET'])
+    def job_status(job_id):
+        base = os.path.join(job_dir, job_id)
+        info = os.path.join(base, "meta", "info.json")
+        with FileLock(info + ".lock"):
+            with open(info, "r") as fp:
+                return json.load(fp)
+
+    @app.route("/job/<string:job_id>/log/stdout/tail", methods=['GET'])
+    @app.route("/job/<string:job_id>/log/stdout/tail/<int:n>", methods=['GET'])
+    def job_stdout(job_id, n=100):
+        return job_log(job_id, "stdout", n)
+
+    @app.route("/job/<string:job_id>/log/stdout/tail", methods=['GET'])
+    @app.route("/job/<string:job_id>/log/stdout/tail/<int:n>", methods=['GET'])
+    def job_stderr(job_id, n=100):
+        return job_log(job_id, "stderr", n)
+
+    @app.route("/jobs/submit", methods=['POST'])
+    def submit_job():
+        arguments = request.get_json()
+
+        job_id = make_job_name(arguments.get("job_name"))
+        base = os.path.join(job_dir, job_id)
+        os.makedirs(os.path.join(job_dir, job_id, "meta"), exist_ok=True)
+
+        script_path = os.path.join(base, "script.sbatch")
+        arguments = request.get_json()
+
+        with open(script_path, "w") as fp:
+            fp.write(arguments["script"])
+
+        cmd = ["bash", script_path]
+        
+        job_state = run( 
+            job_dir,
+            job_id,
+            cmd,
+            **arguments.get("options", {})
+        )
+
+        job_registry.append(job_state)
+        return {"status": "ok", "job_id": job_id}
+
     @app.route("/popen", methods=['POST'])
     def run_command():
-        arguments = request.json
-        job_name = make_job_name()
+        """Make a job run"""
+        arguments = request.get_json()
+        job_name = make_job_name(arguments.get("job_name"))
 
         job_state = run( 
             job_dir,
             job_name,
             arguments["cmd"],
-            arguments["options"]
+            **arguments.get("options", {})
         )
 
         job_registry.append(job_state)
@@ -174,8 +238,8 @@ def server():
     def config():
         return {
             "name": socket.gethostname(),
-            "ssh": "",
             "remote_folder": job_dir,
+            "ssh": "",
             "config": {
 
             }
