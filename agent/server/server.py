@@ -13,7 +13,6 @@ from filelock import FileLock
 from apscheduler.schedulers.background import BackgroundScheduler
 
 
-
 def _worker_run(base_state, stdout, stderr, info, cmd, options, cancel):
     def update_status(obj):
         base_state.update(obj)
@@ -120,14 +119,18 @@ def make_job_name(job_dir):
 
 
 def server():
-    app = Flask(__name__)
-    job_dir = os.getenv("MILABENCH_AGENT_JOB_DIR")
-    job_registry = []
+    import threading
 
+    app = Flask(__name__)
+    job_dir = os.getenv("AGENT_JOB_DIR")
+    job_registry = []  
     scheduler = BackgroundScheduler()
     app.scheduler = scheduler
     app.scheduler.start()
-    
+ 
+    def ping_manager():
+        manager = f"localhost:27484"
+
 
     def get_job(name):
         for job in job_registry:
@@ -152,7 +155,7 @@ def server():
                 schedule_next(job["next"])
 
     app.scheduler.add_job(check_jobs, 'interval', seconds=60)
-    
+
     @app.route("/popen", methods=['POST'])
     def run_command():
         arguments = request.json
